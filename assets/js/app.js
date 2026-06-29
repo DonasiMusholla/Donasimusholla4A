@@ -2,7 +2,7 @@ const TARGET_DANA = 30800000;
 
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSTo4aYtAi1-rc_qgQP9ahWk7GTU_HSnspxXTx70fm8LH2BYPFe-s7mz5eda2saUbjb7lEQQ3X_hsfl/pub?output=csv";
 
-// Data contoh (bisa dihapus setelah Google Sheets bekerja)
+// Data contoh
 const dataContoh = [
     { nama: "Hamba Allah", tanggal: "29 Juni 2026", nominal: 100000 }
 ];
@@ -16,17 +16,26 @@ function formatRupiah(angka) {
 }
 
 function updateProgress(total) {
+    const progressBar = document.getElementById("progressFill");
+    const terkumpul = document.getElementById("terkumpul");
+    const sisa = document.getElementById("sisa");
+    
+    if (!progressBar || !terkumpul || !sisa) {
+        console.error("❌ Element tidak ditemukan!");
+        return;
+    }
+    
     const persen = Math.min(
         (total / TARGET_DANA) * 100,
         100
     );
 
-    document.getElementById("terkumpul").innerHTML = formatRupiah(total);
-    document.getElementById("sisa").innerHTML = formatRupiah(TARGET_DANA - total);
-
-    const progressBar = document.getElementById("progressFill");
+    terkumpul.innerHTML = formatRupiah(total);
+    sisa.innerHTML = formatRupiah(TARGET_DANA - total);
     progressBar.style.width = persen + "%";
     progressBar.innerHTML = persen.toFixed(1) + "%";
+    
+    console.log("✅ Progress updated:", persen.toFixed(1) + "%");
 }
 
 function parseCSV(csvText) {
@@ -37,7 +46,6 @@ function parseCSV(csvText) {
         const line = lines[i].trim();
         if (line === "") continue;
         
-        // Handle CSV dengan atau tanpa quotes
         let cols = [];
         let current = "";
         let inQuotes = false;
@@ -69,6 +77,13 @@ function parseCSV(csvText) {
 }
 
 function displayDonatur(donaturList) {
+    const donaturTable = document.getElementById("donaturTable");
+    
+    if (!donaturTable) {
+        console.error("❌ Element #donaturTable tidak ditemukan!");
+        return;
+    }
+    
     let html = "";
     let totalDonasi = 0;
     let jumlahDonatur = 0;
@@ -80,8 +95,7 @@ function displayDonatur(donaturList) {
             totalDonasi += nominal;
             jumlahDonatur++;
 
-            html += `
-            <tr>
+            html += `<tr>
                 <td>${donatur.nama}</td>
                 <td>${donatur.tanggal}</td>
                 <td>${formatRupiah(nominal)}</td>
@@ -90,52 +104,51 @@ function displayDonatur(donaturList) {
     });
 
     if (html === "") {
-        html = `
-        <tr>
-            <td colspan="3">
-                Belum ada data donatur
-            </td>
+        html = `<tr>
+            <td colspan="3">Belum ada data donatur</td>
         </tr>`;
     }
 
-    document.getElementById("donaturTable").innerHTML = html;
+    donaturTable.innerHTML = html;
 
-    if (document.getElementById("jumlahDonatur")) {
-        document.getElementById("jumlahDonatur").innerHTML = jumlahDonatur;
+    const jumlahElement = document.getElementById("jumlahDonatur");
+    if (jumlahElement) {
+        jumlahElement.innerHTML = jumlahDonatur;
     }
 
     updateProgress(totalDonasi);
+    console.log("✅ Donatur berhasil ditampilkan:", jumlahDonatur, "donatur");
 }
 
-// Fetch dari Google Sheets
-fetch(csvUrl)
-    .then(response => response.text())
-    .then(data => {
-        console.log("Raw CSV Data:", data);
-        
-        const donaturList = parseCSV(data);
-        console.log("Parsed Data dari Google Sheets:", donaturList);
-        
-        if (donaturList.length > 0) {
-            displayDonatur(donaturList);
-            console.log("✅ Data dari Google Sheets berhasil ditampilkan");
-        } else {
-            console.log("⚠️ Google Sheets kosong, menampilkan data contoh");
+function loadDonaturData() {
+    console.log("🔄 Loading data donatur...");
+    
+    fetch(csvUrl, { mode: 'no-cors' })
+        .then(response => response.text())
+        .then(data => {
+            console.log("📥 Raw CSV Data received");
+            
+            const donaturList = parseCSV(data);
+            console.log("📊 Parsed data:", donaturList);
+            
+            if (donaturList.length > 0) {
+                displayDonatur(donaturList);
+                console.log("✅ Data dari Google Sheets berhasil");
+            } else {
+                console.log("⚠️ Google Sheets kosong, gunakan data contoh");
+                displayDonatur(dataContoh);
+            }
+        })
+        .catch(error => {
+            console.error("❌ Error:", error.message);
+            console.log("📌 Menampilkan data contoh");
             displayDonatur(dataContoh);
-        }
-    })
-    .catch(error => {
-        console.error("❌ Error fetching Google Sheets:", error);
-        console.log("📌 Menampilkan data contoh karena error");
-        
-        // Tampilkan data contoh jika Google Sheets gagal
-        displayDonatur(dataContoh);
-        
-        document.getElementById("donaturTable").innerHTML += `
-        <tr style="background: #fff3cd;">
-            <td colspan="3" style="color: #856404;">
-                💡 Catatan: Menampilkan data contoh. 
-                Pastikan Google Sheets sudah dipublish dengan benar.
-            </td>
-        </tr>`;
-    });
+        });
+}
+
+// Tunggu DOM fully loaded sebelum eksekusi
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadDonaturData);
+} else {
+    loadDonaturData();
+}
