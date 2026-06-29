@@ -1,28 +1,21 @@
 const TARGET_DANA = 30800000;
 
 const dataContoh = [
-    { nama: "Hamba Allah", tanggal: "29 Juni 2026", nominal: 100000 }
+    {nama: "Hamba Allah", tanggal: "29 Juni 2026", nominal: 100000}
 ];
 
 function formatRupiah(angka) {
-    return new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-        maximumFractionDigits: 0
-    }).format(angka);
+    return new Intl.NumberFormat("id-ID", {style: "currency", currency: "IDR", maximumFractionDigits: 0}).format(angka);
 }
 
 function updateProgress(total) {
-    const progressBar = document.getElementById("progressFill");
-    const terkumpul = document.getElementById("terkumpul");
-    const sisa = document.getElementById("sisa");
+    var progressBar = document.getElementById("progressFill");
+    var terkumpul = document.getElementById("terkumpul");
+    var sisa = document.getElementById("sisa");
     
-    if (!progressBar || !terkumpul || !sisa) {
-        console.error("Element tidak ditemukan");
-        return;
-    }
+    if (!progressBar || !terkumpul || !sisa) return;
     
-    const persen = Math.min((total / TARGET_DANA) * 100, 100);
+    var persen = Math.min((total / TARGET_DANA) * 100, 100);
     terkumpul.innerHTML = formatRupiah(total);
     sisa.innerHTML = formatRupiah(TARGET_DANA - total);
     progressBar.style.width = persen + "%";
@@ -30,20 +23,16 @@ function updateProgress(total) {
 }
 
 function displayDonatur(donaturList) {
-    const donaturTable = document.getElementById("donaturTable");
+    var donaturTable = document.getElementById("donaturTable");
+    if (!donaturTable) return;
     
-    if (!donaturTable) {
-        console.error("Element donaturTable tidak ditemukan");
-        return;
-    }
-    
-    let html = "";
-    let totalDonasi = 0;
-    let jumlahDonatur = 0;
+    var html = "";
+    var totalDonasi = 0;
+    var jumlahDonatur = 0;
 
-    for (let i = 0; i < donaturList.length; i++) {
-        const donatur = donaturList[i];
-        const nominal = parseInt(String(donatur.nominal).replace(/[^0-9]/g, "")) || 0;
+    for (var i = 0; i < donaturList.length; i++) {
+        var donatur = donaturList[i];
+        var nominal = parseInt(String(donatur.nominal).replace(/[^0-9]/g, "")) || 0;
         
         if (nominal > 0) {
             totalDonasi += nominal;
@@ -53,21 +42,19 @@ function displayDonatur(donaturList) {
     }
 
     if (html === "") {
-        html = "<tr><td colspan=\"3\">Belum ada data donatur</td></tr>";
+        html = "<tr><td colspan='3'>Belum ada data donatur</td></tr>";
     }
 
     donaturTable.innerHTML = html;
     updateProgress(totalDonasi);
-    console.log("Total donatur: " + jumlahDonatur);
 }
 
 function initApp() {
-    console.log("Aplikasi dimulai");
     displayDonatur(dataContoh);
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp);
 } else {
     initApp();
 }
