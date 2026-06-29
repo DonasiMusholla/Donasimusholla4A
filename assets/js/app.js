@@ -2,6 +2,11 @@ const TARGET_DANA = 30800000;
 
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSTo4aYtAi1-rc_qgQP9ahWk7GTU_HSnspxXTx70fm8LH2BYPFe-s7mz5eda2saUbjb7lEQQ3X_hsfl/pub?output=csv";
 
+// Data contoh (bisa dihapus setelah Google Sheets bekerja)
+const dataContoh = [
+    { nama: "Hamba Allah", tanggal: "29 Juni 2026", nominal: 100000 }
+];
+
 function formatRupiah(angka) {
     return new Intl.NumberFormat("id-ID", {
         style: "currency",
@@ -63,60 +68,74 @@ function parseCSV(csvText) {
     return result;
 }
 
-// Fetch dan proses data
+function displayDonatur(donaturList) {
+    let html = "";
+    let totalDonasi = 0;
+    let jumlahDonatur = 0;
+
+    donaturList.forEach(donatur => {
+        const nominal = parseInt(donatur.nominal.toString().replace(/[^0-9]/g, "")) || 0;
+        
+        if (nominal > 0) {
+            totalDonasi += nominal;
+            jumlahDonatur++;
+
+            html += `
+            <tr>
+                <td>${donatur.nama}</td>
+                <td>${donatur.tanggal}</td>
+                <td>${formatRupiah(nominal)}</td>
+            </tr>`;
+        }
+    });
+
+    if (html === "") {
+        html = `
+        <tr>
+            <td colspan="3">
+                Belum ada data donatur
+            </td>
+        </tr>`;
+    }
+
+    document.getElementById("donaturTable").innerHTML = html;
+
+    if (document.getElementById("jumlahDonatur")) {
+        document.getElementById("jumlahDonatur").innerHTML = jumlahDonatur;
+    }
+
+    updateProgress(totalDonasi);
+}
+
+// Fetch dari Google Sheets
 fetch(csvUrl)
     .then(response => response.text())
     .then(data => {
-        console.log("Raw CSV Data:", data); // Debug log
+        console.log("Raw CSV Data:", data);
         
         const donaturList = parseCSV(data);
-        console.log("Parsed Data:", donaturList); // Debug log
+        console.log("Parsed Data dari Google Sheets:", donaturList);
         
-        let html = "";
-        let totalDonasi = 0;
-        let jumlahDonatur = 0;
-
-        donaturList.forEach(donatur => {
-            const nominal = parseInt(donatur.nominal.replace(/[^0-9]/g, "")) || 0;
-            
-            if (nominal > 0) {
-                totalDonasi += nominal;
-                jumlahDonatur++;
-
-                html += `
-                <tr>
-                    <td>${donatur.nama}</td>
-                    <td>${donatur.tanggal}</td>
-                    <td>${formatRupiah(nominal)}</td>
-                </tr>`;
-            }
-        });
-
-        if (html === "") {
-            html = `
-            <tr>
-                <td colspan="3">
-                    Belum ada data donatur
-                </td>
-            </tr>`;
+        if (donaturList.length > 0) {
+            displayDonatur(donaturList);
+            console.log("✅ Data dari Google Sheets berhasil ditampilkan");
+        } else {
+            console.log("⚠️ Google Sheets kosong, menampilkan data contoh");
+            displayDonatur(dataContoh);
         }
-
-        document.getElementById("donaturTable").innerHTML = html;
-
-        if (document.getElementById("jumlahDonatur")) {
-            document.getElementById("jumlahDonatur").innerHTML = jumlahDonatur;
-        }
-
-        updateProgress(totalDonasi);
-        console.log("Total Donasi:", formatRupiah(totalDonasi)); // Debug log
     })
     .catch(error => {
-        console.error("Error fetching data:", error);
-
-        document.getElementById("donaturTable").innerHTML = `
-        <tr>
-            <td colspan="3">
-                Gagal memuat data donatur. Error: ${error.message}
+        console.error("❌ Error fetching Google Sheets:", error);
+        console.log("📌 Menampilkan data contoh karena error");
+        
+        // Tampilkan data contoh jika Google Sheets gagal
+        displayDonatur(dataContoh);
+        
+        document.getElementById("donaturTable").innerHTML += `
+        <tr style="background: #fff3cd;">
+            <td colspan="3" style="color: #856404;">
+                💡 Catatan: Menampilkan data contoh. 
+                Pastikan Google Sheets sudah dipublish dengan benar.
             </td>
         </tr>`;
     });
