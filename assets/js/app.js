@@ -1,7 +1,3 @@
 var TARGET_DANA=30800000;
-var data=[
-  {nama:"Hamba Allah",tanggal:"29 Juni 2026",nominal:100000},
-  {nama:"Hamba Allah",tanggal:"30 Juni 2026",nominal:500000},
-  {nama:"Hamba Allah",tanggal:"30 Juni 2026",nominal:1000000}
-];
+var data=[{nama:"Hamba Allah",tanggal:"29 Juni 2026",nominal:100000},{nama:"Hamba Allah",tanggal:"30 Juni 2026",nominal:500000},{nama:"Hamba Allah",tanggal:"30 Juni 2026",nominal:1000000}];
 function rupiah(a){return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(a)}function update(b){var c=document.getElementById("progressFill"),d=document.getElementById("terkumpul"),e=document.getElementById("sisa");if(c&&d&&e){var f=Math.min(b/TARGET_DANA*100,100);d.innerHTML=rupiah(b);e.innerHTML=rupiah(TARGET_DANA-b);c.style.width=f+"%";c.innerHTML=f.toFixed(1)+"%"}}function show(g){var h=document.getElementById("donaturTable");if(!h)return;var i="",j=0,k=0;for(var l=0;l<g.length;l++){var m=parseInt(String(g[l].nominal).replace(/[^0-9]/g,""))||0;if(m>0){j+=m;k++;i+="<tr><td>"+g[l].nama+"</td><td>"+g[l].tanggal+"</td><td>"+rupiah(m)+"</td></tr>"}}i===""&&(i="<tr><td colspan='3'>Belum ada</td></tr>");h.innerHTML=i;update(j)}function go(){show(data)}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",go)}else{go()}
